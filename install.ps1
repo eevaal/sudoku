@@ -54,9 +54,20 @@ foreach ($cmd in $cmdlets) {
     # Skip short unix-like aliases so they don't override our Go binaries in CMD
     if ($cmd -in "ls", "rm", "cp", "mv", "cat", "pwd", "mkdir", "clear", "sleep", "echo", "head", "tail", "wc") { continue }
     $batPath = Join-Path $BridgeDir "$cmd.bat"
+    
+    $cmdObj = Get-Command $cmd -CommandType Cmdlet, Function, Alias -ErrorAction SilentlyContinue
+    $moduleName = $cmdObj.ModuleName
+    if (-not $moduleName -and $cmdObj.CommandType -eq 'Alias') {
+        $moduleName = $cmdObj.ResolvedCommand.ModuleName
+    }
+    $importStr = ""
+    if ($moduleName) {
+        $importStr = "Import-Module $moduleName -ErrorAction SilentlyContinue; "
+    }
+
     # Only write if it doesn't exist to save time on subsequent runs
-    if (-not (Test-Path $batPath) -or (Get-Content $batPath) -match "@powershell -NoProfile -Command $cmd") {
-        Set-Content -Path $batPath -Value "@powershell -NoProfile -Command `"& (Get-Command $cmd -CommandType Cmdlet,Function,Alias) %*`""
+    if (-not (Test-Path $batPath) -or (Get-Content $batPath) -notmatch "Import-Module") {
+        Set-Content -Path $batPath -Value "@powershell -NoProfile -Command `"$importStr& (Get-Command $cmd -CommandType Cmdlet,Function,Alias) %*`""
         $pwshWrappersCount++
     }
 }
