@@ -1,1 +1,0 @@
-echo BAT_RAN
