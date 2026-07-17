@@ -24,17 +24,20 @@ if (-not (Test-Path $BinDir)) {
     Write-Host "[v] Directory already exists: $BinDir" -ForegroundColor DarkGreen
 }
 
-# Compile
-Write-Host "[+] Compiling sudo.exe..." -ForegroundColor Yellow
-go build -o "$BinDir\sudo.exe" "./$SudoCmd"
-if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne $null) {
-    Write-Error "Error compiling sudo.exe"
-}
-
-Write-Host "[+] Compiling rm.exe..." -ForegroundColor Yellow
-go build -o "$BinDir\rm.exe" "./$RmCmd"
-if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne $null) {
-    Write-Error "Error compiling rm.exe"
+# Dynamic Compilation
+$CmdDir = Join-Path $PWD "cmd"
+if (Test-Path $CmdDir) {
+    $tools = Get-ChildItem -Path $CmdDir -Directory
+    foreach ($tool in $tools) {
+        $toolName = $tool.Name
+        Write-Host "[+] Compiling $toolName.exe..." -ForegroundColor Yellow
+        go build -o "$BinDir\$toolName.exe" "./cmd/$toolName"
+        if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne $null) {
+            Write-Error "Error compiling $toolName.exe"
+        }
+    }
+} else {
+    Write-Warning "Directory 'cmd' not found!"
 }
 
 # Update PATH (Persistent for MACHINE to override System32)
