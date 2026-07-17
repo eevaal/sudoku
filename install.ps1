@@ -55,8 +55,8 @@ foreach ($cmd in $cmdlets) {
     if ($cmd -in "ls", "rm", "cp", "mv", "cat", "pwd", "mkdir", "clear", "sleep", "echo", "head", "tail", "wc") { continue }
     $batPath = Join-Path $BridgeDir "$cmd.bat"
     # Only write if it doesn't exist to save time on subsequent runs
-    if (-not (Test-Path $batPath)) {
-        Set-Content -Path $batPath -Value "@powershell -NoProfile -Command $cmd %*"
+    if (-not (Test-Path $batPath) -or (Get-Content $batPath) -match "@powershell -NoProfile -Command $cmd") {
+        Set-Content -Path $batPath -Value "@powershell -NoProfile -Command `"& (Get-Command $cmd -CommandType Cmdlet,Function,Alias) %*`""
         $pwshWrappersCount++
     }
 }
