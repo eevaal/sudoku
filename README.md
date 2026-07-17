@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="logo.png" alt="Sudoku Logo" width="200">
-</p>
+![Sudoku Logo](./logo.png)
 
 # Sudoku
 
