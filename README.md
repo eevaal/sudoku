@@ -29,6 +29,10 @@ The following Unix-like commands are currently implemented:
 - `whoami` - Print effective user ID.
 - `sleep` - Delay for a specified amount of time.
 - `clear` - Clear the terminal screen.
+- `winch` - Built-in WINdows fastfetCH clone with ASCII logo.
+- `uname` - Print system information.
+- `uptime` - Print how long the system has been running.
+- `nvim` - Wraps and automatically installs the official Neovim editor.
 
 ## Installation
 
