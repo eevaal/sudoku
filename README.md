@@ -7,7 +7,7 @@ Sudoku is a lightweight system package for Windows designed to erase the borders
 ## Features
 
 - **Native Windows API integration**: Commands like `sudo` automatically trigger the standard UAC prompt for privilege elevation.
-- **Cross-shell compatibility**: Works seamlessly in both PowerShell and CMD.
+- **Sudoku PowerBridge**: True two-way interoperability between PowerShell and CMD. Automatically generates over 2,000 asynchronous wrappers so that you can run any PowerShell Cmdlet directly from CMD, and all CMD built-ins from PowerShell.
 - **Zero dependencies**: Written in Go and compiled to standalone lightweight binaries.
 
 ## Available Commands
@@ -65,6 +65,17 @@ rm -rf ./build/*
 # Search for text in a file
 grep -i "error" app.log
 ```
+
+## Sudoku PowerBridge
+
+Sudoku PowerBridge is a core feature that erases the boundaries between Windows CMD and PowerShell. 
+
+When you run the installation script, Sudoku generates a lightweight `bridge` directory containing asynchronous `.bat` wrappers for **over 2,000 PowerShell cmdlets** and all **CMD built-in commands** (like `mklink`, `assoc`, `title`, etc.).
+
+- **From CMD**: You can natively call any PowerShell cmdlet (e.g. `Get-Process`) directly, without typing `powershell -c ...`. Sudoku automatically resolves the module, handles auto-loading, and passes your arguments seamlessly.
+- **From PowerShell**: You can call CMD built-in commands directly as if they were native executables.
+
+The generation process is highly optimized and runs completely asynchronously in the background, so it doesn't block your terminal or cause any black screens during installation.
 
 ## License
 
