@@ -46,45 +46,43 @@ if (-not (Test-Path $BridgeDir)) {
     Write-Host "[+] Created bridge directory: $BridgeDir" -ForegroundColor Green
 }
 
-# 1. PowerShell -> CMD (Generate wrappers for all PowerShell Cmdlets)
-Write-Host "[+] Generating PowerShell wrappers for CMD (this may take a few seconds on first run)..." -ForegroundColor Yellow
-$cmdlets = Get-Command -CommandType Cmdlet, Function, Alias | Where-Object { $_.Name -match "^[a-zA-Z\-]+$" } | Select-Object -ExpandProperty Name -Unique
-$pwshWrappersCount = 0
-foreach ($cmd in $cmdlets) {
-    # Skip short unix-like aliases so they don't override our Go binaries in CMD
-    if ($cmd -in "ls", "rm", "cp", "mv", "cat", "pwd", "mkdir", "clear", "sleep", "echo", "head", "tail", "wc") { continue }
-    $batPath = Join-Path $BridgeDir "$cmd.bat"
+$bridgeGeneratorPath = Join-Path $env:USERPROFILE ".sudoku\generate_bridge.ps1"
+$generatorContent = @"
+`$ErrorActionPreference = "Stop"
+`$BridgeDir = Join-Path `$env:USERPROFILE ".sudoku\bridge"
+if (-not (Test-Path `$BridgeDir)) { New-Item -ItemType Directory -Force -Path `$BridgeDir | Out-Null }
+
+`$cmdletObjs = Get-Command -CommandType Cmdlet, Function, Alias | Where-Object { `$_.Name -match "^[a-zA-Z\-]+`$" } | Group-Object Name | ForEach-Object { `$_.Group[0] }
+foreach (`$cmdObj in `$cmdletObjs) {
+    `$cmd = `$cmdObj.Name
+    if (`$cmd -in "ls", "rm", "cp", "mv", "cat", "pwd", "mkdir", "clear", "sleep", "echo", "head", "tail", "wc") { continue }
+    `$batPath = Join-Path `$BridgeDir "`$cmd.bat"
     
-    $cmdObj = Get-Command $cmd -CommandType Cmdlet, Function, Alias -ErrorAction SilentlyContinue
-    $moduleName = $cmdObj.ModuleName
-    if (-not $moduleName -and $cmdObj.CommandType -eq 'Alias') {
-        $moduleName = $cmdObj.ResolvedCommand.ModuleName
+    if (Test-Path `$batPath) { continue }
+    
+    `$moduleName = `$cmdObj.ModuleName
+    if (-not `$moduleName -and `$cmdObj.CommandType -eq 'Alias') {
+        `$moduleName = `$cmdObj.ResolvedCommand.ModuleName
     }
-    $importStr = ""
-    if ($moduleName) {
-        $importStr = "Import-Module $moduleName -ErrorAction SilentlyContinue; "
+    `$importStr = ""
+    if (`$moduleName) {
+        `$importStr = "Import-Module `$moduleName -ErrorAction SilentlyContinue; "
     }
+    Set-Content -Path `$batPath -Value "@powershell -NoProfile -Command `"`$importStr& (Get-Command `$cmd -CommandType Cmdlet,Function,Alias) %*`""
+}
 
-    # Only write if it doesn't exist to save time on subsequent runs
-    if (-not (Test-Path $batPath) -or (Get-Content $batPath) -notmatch "Import-Module") {
-        Set-Content -Path $batPath -Value "@powershell -NoProfile -Command `"$importStr& (Get-Command $cmd -CommandType Cmdlet,Function,Alias) %*`""
-        $pwshWrappersCount++
+`$cmdBuiltins = @("assoc", "ftype", "mklink", "vol", "ver", "title", "color", "start", "md", "rd", "ren", "rename", "call", "pushd", "popd", "doskey")
+foreach (`$cmd in `$cmdBuiltins) {
+    `$batPath = Join-Path `$BridgeDir "`$cmd.bat"
+    if (-not (Test-Path `$batPath)) {
+        Set-Content -Path `$batPath -Value "@cmd /c `$cmd %*"
     }
 }
-Write-Host "[+] Generated $pwshWrappersCount new wrappers for PowerShell cmdlets." -ForegroundColor Green
+"@
 
-# 2. CMD -> PowerShell (Generate wrappers for CMD builtins)
-Write-Host "[+] Generating CMD built-in wrappers for PowerShell..." -ForegroundColor Yellow
-$cmdBuiltins = @("assoc", "ftype", "mklink", "vol", "ver", "title", "color", "start", "md", "rd", "ren", "rename", "call", "pushd", "popd", "doskey")
-$cmdWrappersCount = 0
-foreach ($cmd in $cmdBuiltins) {
-    $batPath = Join-Path $BridgeDir "$cmd.bat"
-    if (-not (Test-Path $batPath)) {
-        Set-Content -Path $batPath -Value "@cmd /c $cmd %*"
-        $cmdWrappersCount++
-    }
-}
-Write-Host "[+] Generated $cmdWrappersCount new wrappers for CMD built-ins." -ForegroundColor Green
+Set-Content -Path $bridgeGeneratorPath -Value $generatorContent
+Start-Process powershell -WindowStyle Hidden -ArgumentList "-ExecutionPolicy", "Bypass", "-File", "`"$bridgeGeneratorPath`""
+Write-Host "[+] Bridge wrappers generation started asynchronously in the background." -ForegroundColor Green
 
 # 3. Fix PowerShell Aliases in $PROFILE
 Write-Host "[+] Patching PowerShell `$PROFILE to remove conflicting aliases..." -ForegroundColor Yellow
