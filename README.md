@@ -1,4 +1,6 @@
-![Sudoku Logo](./logo.png)
+<p align="center">
+  <img src="./logo.png" width="256" height="256" alt="Sudoku Logo">
+</p>
 
 # Sudoku
 
@@ -74,6 +76,14 @@ When you run the installation script, Sudoku generates a lightweight `bridge` di
 
 - **From CMD**: You can natively call any PowerShell cmdlet (e.g. `Get-Process`) directly, without typing `powershell -c ...`. Sudoku automatically resolves the module, handles auto-loading, and passes your arguments seamlessly.
 - **From PowerShell**: You can call CMD built-in commands directly as if they were native executables.
+
+**Note on Complex PowerShell Expressions in CMD:**
+Because of the way Windows CMD parses parentheses, complex PowerShell expressions starting with an opening parenthesis, such as `(New-Object -ComObject SAPI.SpVoice).Speak(...)`, cannot be evaluated directly as the first token. 
+To execute such complex commands natively from CMD, wrap them in the `Write-Output` cmdlet. This correctly invokes the wrapper and allows PowerShell to evaluate the entire pipeline:
+
+```cmd
+C:\> Write-Output ((New-Object -ComObject SAPI.SpVoice).Speak("Sudoku Power Bridge is alive"))
+```
 
 The generation process is highly optimized and runs completely asynchronously in the background, so it doesn't block your terminal or cause any black screens during installation.
 
