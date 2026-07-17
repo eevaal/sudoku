@@ -1,1 +1,1 @@
-# scs
+# sudoku
