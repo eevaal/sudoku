@@ -29,19 +29,31 @@ type memoryStatusEx struct {
 }
 
 func main() {
-	// ASCII Art
+	// ASCII Art - Colored Clippy
+	// Colors used: 
+	// \033[38;5;250m - Silver/Grey (Body)
+	// \033[38;5;16m  - Black (Eyebrows/Pupils)
+	// \033[38;5;231m - White (Eyes)
+	cBody := "\033[38;5;250m"
+	cBlack := "\033[38;5;16m"
+	cWhite := "\033[38;5;231m"
+	cReset := "\033[0m"
+
 	ascii := []string{
-		"\033[36mWWWWWWWWWWWWWW  WWWWWWWWWWWWWWWWWWW\033[0m",
-		"\033[36mWWWWWWWWWWWWWW  WWWWWWWWWWWWWWWWWWW\033[0m",
-		"\033[36mWWWWWWWWWWWWWW  WWWWWWWWWWWWWWWWWWW\033[0m",
-		"\033[36mWWWWWWWWWWWWWW  WWWWWWWWWWWWWWWWWWW\033[0m",
-		"\033[36mWWWWWWWWWWWWWW  WWWWWWWWWWWWWWWWWWW\033[0m",
-		"",
-		"\033[36mWWWWWWWWWWWWWW  WWWWWWWWWWWWWWWWWWW\033[0m",
-		"\033[36mWWWWWWWWWWWWWW  WWWWWWWWWWWWWWWWWWW\033[0m",
-		"\033[36mWWWWWWWWWWWWWW  WWWWWWWWWWWWWWWWWWW\033[0m",
-		"\033[36mWWWWWWWWWWWWWW  WWWWWWWWWWWWWWWWWWW\033[0m",
-		"\033[36mWWWWWWWWWWWWWW  WWWWWWWWWWWWWWWWWWW\033[0m",
+		cBody + "⠀⠀⠀⠀⠀⣠⢖⣭⣿⣿⣷⣄⠀⠀⠀⠀" + cReset,
+		cBody + "⠀⠀⠀⢀⣠⣡⣟⠁⠀⠀⠹⣿⡇⠀⠀⠀" + cReset,
+		cBody + "⠀⢠⣾" + cBlack + "⣿⡟⣿⠿⠃" + cBody + "⠀⠀⢸⣿⣧⣄⠀⠀" + cReset,
+		cBody + "⢠⡮⢁" + cWhite + "⣤" + cBlack + "⣤" + cBody + "⡉⠳⡄⠀⣠⠾" + cWhite + "⠹" + cBlack + "⠿" + cBody + "⣻⣷⡄" + cReset,
+		cBody + "⠸⣇" + cWhite + "⠼⠿⡿⠟" + cBlack + "⣤" + cBody + "⡇⣮⠀" + cWhite + "⣶" + cBlack + "⣶" + cBody + "⣦⡈⢻⠋" + cReset,
+		cBody + "⠀⠈⠙⢳⣶⡞⠋⠀⠹⢦⡙⠛⠛⣠⡾⠀" + cReset,
+		cBody + "⠀⠀⠀⢸⣿⣷⣶⡀⠀⠀⣿⣿⢉⣿⡆⠀" + cReset,
+		cBody + "⠀⠀⠀⢸⣿⣿⣿⠀⠀⠀⣿⡇⣾⣿⠃⠀" + cReset,
+		cBody + "⠀⠀⠀⢰⣿⣿⣿⡀⠀⠀⣿⡇⣿⣿⠀⠀" + cReset,
+		cBody + "⠀⠀⠀⠀⣿⢻⣿⢇⠀⠀⣿⣿⣿⣿⠀⠀" + cReset,
+		cBody + "⠀⠀⠀⠀⢿⣾⡿⣾⣲⣚⣽⠇⣿⣿⠀⠀" + cReset,
+		cBody + "⠀⠀⠀⠀⠸⣧⢧⠈⠉⠉⠁⠀⣿⣿⠀⠀" + cReset,
+		cBody + "⠀⠀⠀⠀⠀⢻⣞⢆⠀⠀⠀⡠⢻⡿⠀⠀" + cReset,
+		cBody + "⠀⠀⠀⠀⠀⠀⠙⢷⣭⣤⣭⡴⠟⠀⠀⠀" + cReset,
 	}
 
 	// Fetch info
