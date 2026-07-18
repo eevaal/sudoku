@@ -35,8 +35,6 @@ func main() {
 	// \033[38;5;16m  - Black (Eyebrows/Pupils)
 	// \033[38;5;231m - White (Eyes)
 	cBody := "\033[38;5;250m"
-	cBlack := "\033[38;5;16m"
-	cWhite := "\033[38;5;231m"
 	cReset := "\033[0m"
 
 	ascii := []string{
