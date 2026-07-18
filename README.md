@@ -96,7 +96,7 @@ Because of the way Windows CMD parses parentheses, complex PowerShell expression
 To execute such complex commands natively from CMD, wrap them in the `Write-Output` cmdlet. This correctly invokes the wrapper and allows PowerShell to evaluate the entire pipeline:
 
 ```cmd
-C:\> Write-Output ((New-Object -ComObject SAPI.SpVoice).Speak("Sudoku Power Bridge is alive"))
+C:\> Write-Output ((New-Object -ComObject SAPI.SpVoice).Speak('Sudoku Power Bridge is alive'))
 ```
 
 The generation process is highly optimized and runs completely asynchronously in the background, so it doesn't block your terminal or cause any black screens during installation.
