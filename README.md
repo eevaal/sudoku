@@ -38,17 +38,31 @@ The following Unix-like commands are currently implemented:
 
 ## Installation
 
-To install or update the package, run the included PowerShell script. The script automatically compiles all commands and prepends them to your system's PATH variable to override native Windows commands where necessary.
+There are two ways to install or update Sudoku: the recommended automatic method or the manual method. Both methods automatically compile all commands and prepend them to your system's PATH variable to override native Windows commands where necessary.
 
-1. Open PowerShell as Administrator.
-2. Navigate to the project directory.
-3. Run the installation script:
+### Automatic Installation (Recommended)
+
+You can install Sudoku with a single command. Open PowerShell as Administrator and run the following:
+
+```powershell
+iex (irm "https://raw.githubusercontent.com/eevaal/sudoku/main/install.ps1")
+```
+
+### Manual Installation
+
+If you prefer to download the files manually:
+
+1. Download the repository archive and extract it.
+2. Open PowerShell as Administrator.
+3. Navigate to the extracted project directory.
+4. Run the installation script:
 
 ```powershell
 .\install.ps1
 ```
 
-Once installed, the binaries are placed in `~/.sudoku/bin` and are immediately available globally.
+Once installed, the binaries are placed in `~/.sudoku/bin` and the Sudoku PowerBridge is configured globally.
+
 
 ## Usage
 

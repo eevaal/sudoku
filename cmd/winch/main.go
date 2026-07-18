@@ -30,7 +30,7 @@ type memoryStatusEx struct {
 
 func main() {
 	// ASCII Art - Colored Clippy
-	// Colors used: 
+	// Colors used:
 	// \033[38;5;250m - Silver/Grey (Body)
 	// \033[38;5;16m  - Black (Eyebrows/Pupils)
 	// \033[38;5;231m - White (Eyes)
@@ -42,10 +42,10 @@ func main() {
 	ascii := []string{
 		cBody + "⠀⠀⠀⠀⠀⣠⢖⣭⣿⣿⣷⣄⠀⠀⠀⠀" + cReset,
 		cBody + "⠀⠀⠀⢀⣠⣡⣟⠁⠀⠀⠹⣿⡇⠀⠀⠀" + cReset,
-		cBody + "⠀⢠⣾" + cBlack + "⣿⡟⣿⠿⠃" + cBody + "⠀⠀⢸⣿⣧⣄⠀⠀" + cReset,
-		cBody + "⢠⡮⢁" + cWhite + "⣤" + cBlack + "⣤" + cBody + "⡉⠳⡄⠀⣠⠾" + cWhite + "⠹" + cBlack + "⠿" + cBody + "⣻⣷⡄" + cReset,
-		cBody + "⠸⣇" + cWhite + "⠼⠿⡿⠟" + cBlack + "⣤" + cBody + "⡇⣮⠀" + cWhite + "⣶" + cBlack + "⣶" + cBody + "⣦⡈⢻⠋" + cReset,
-		cBody + "⠀⠈⠙⢳⣶⡞⠋⠀⠹⢦⡙⠛⠛⣠⡾⠀" + cReset,
+		cBody + "⠀⢠⣾⣿⡟⣿⠿⠃⠀⢸⣿⣧⣄⠀⠀" + cReset,
+		cBody + "⢠⡮⢁⣤⣤⡉⠳⡄⠀⣠⠾⠹⠻⣻⣷⡄" + cReset,
+		cBody + "⠸⣇⠼⠿⡿⠟⣤⡇⣮⠀⣶⣶⣦⡈⢻⠋" + cReset,
+		cBody + "⠈⠙⢳⣶⡞⠋⠀⠹⢦⡙⠛⠛⣠⡾⠀" + cReset,
 		cBody + "⠀⠀⠀⢸⣿⣷⣶⡀⠀⠀⣿⣿⢉⣿⡆⠀" + cReset,
 		cBody + "⠀⠀⠀⢸⣿⣿⣿⠀⠀⠀⣿⡇⣾⣿⠃⠀" + cReset,
 		cBody + "⠀⠀⠀⢰⣿⣿⣿⡀⠀⠀⣿⡇⣿⣿⠀⠀" + cReset,
@@ -98,7 +98,7 @@ func main() {
 		}
 		// Calculate display length of ascii (strip ansi codes for padding calc)
 		padLength := 40
-		
+
 		in := ""
 		if i < len(info) {
 			in = info[i]
