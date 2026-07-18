@@ -79,7 +79,7 @@ func main() {
 		fmt.Sprintf("\033[36mOS\033[0m: Windows %s", runtime.GOARCH),
 		fmt.Sprintf("\033[36mUptime\033[0m: %s", uptimeStr),
 		fmt.Sprintf("\033[36mMemory\033[0m: %d MB / %d MB", usedMemMB, totalMemMB),
-		fmt.Sprintf("\033[36mShell\033[0m: sudoku"),
+		"\033[36mShell\033[0m: sudoku",
 	}
 
 	// Pad ascii or info so they match
