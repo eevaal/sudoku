@@ -1,5 +1,8 @@
 $ErrorActionPreference = "Stop"
 
+# Temporarily remove bridge from session PATH to prevent calling our own wrappers
+$env:PATH = ($env:PATH -split ';' | Where-Object { $_ -notlike '*\.sudoku\bridge*' }) -join ';'
+
 # Check for Administrator privileges
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
@@ -46,6 +49,19 @@ if (-not (Test-Path $BridgeDir)) {
     Write-Host "[+] Created bridge directory: $BridgeDir" -ForegroundColor Green
 }
 
+$serverSource = Join-Path $PWD "server.ps1"
+$serverDest = Join-Path $env:USERPROFILE ".sudoku\server.ps1"
+if (Test-Path $serverSource) {
+    Copy-Item -Path $serverSource -Destination $serverDest -Force
+}
+
+$runKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
+$runValue = "powershell -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -File `"$serverDest`""
+Set-ItemProperty -Path $runKey -Name "SudokuServer" -Value $runValue -ErrorAction SilentlyContinue
+
+# Start the server now
+Start-Process powershell -WindowStyle Hidden -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$serverDest`""
+
 $bridgeGeneratorPath = Join-Path $env:USERPROFILE ".sudoku\generate_bridge.ps1"
 $generatorContent = @"
 `$ErrorActionPreference = "Stop"
@@ -58,17 +74,9 @@ foreach (`$cmdObj in `$cmdletObjs) {
     if (`$cmd -in "ls", "rm", "cp", "mv", "cat", "pwd", "mkdir", "clear", "sleep", "echo", "head", "tail", "wc") { continue }
     `$batPath = Join-Path `$BridgeDir "`$cmd.bat"
     
-    if (Test-Path `$batPath) { continue }
-    
-    `$moduleName = `$cmdObj.ModuleName
-    if (-not `$moduleName -and `$cmdObj.CommandType -eq 'Alias') {
-        `$moduleName = `$cmdObj.ResolvedCommand.ModuleName
-    }
-    `$importStr = ""
-    if (`$moduleName) {
-        `$importStr = "Import-Module `$moduleName -ErrorAction SilentlyContinue; "
-    }
-    Set-Content -Path `$batPath -Value "@powershell -NoProfile -Command `"`$importStr& (Get-Command `$cmd -CommandType Cmdlet,Function,Alias) %*`""
+    `$formatString = '@set PATH=%PATH:{0}=%`n@set PATH=%PATH:;;=;%`n@bridge.exe "{1}" %*'
+    `$batContent = `$formatString -f `$BridgeDir, `$cmd
+    Set-Content -Path `$batPath -Value `$batContent
 }
 
 `$cmdBuiltins = @("assoc", "ftype", "mklink", "vol", "ver", "title", "color", "start", "md", "rd", "ren", "rename", "call", "pushd", "popd", "doskey")
@@ -98,10 +106,13 @@ if (-not (Test-Path $profilePath)) {
 
 $profileSnippet = @"
 # --- BEGIN SUDOKU ALIAS FIX ---
+`$oldPref = `$global:PSModuleAutoLoadingPreference
+`$global:PSModuleAutoLoadingPreference = 'None'
 `$aliasesToRemove = @('dir', 'echo', 'copy', 'del', 'move', 'type', 'cat', 'ls', 'rm', 'cp', 'mv', 'pwd', 'sleep', 'clear', 'mkdir', 'kill')
 foreach (`$a in `$aliasesToRemove) {
     if (Test-Path "Alias:`$a") { Remove-Item "Alias:`$a" -Force -ErrorAction SilentlyContinue }
 }
+if (`$oldPref -ne `$null) { `$global:PSModuleAutoLoadingPreference = `$oldPref } else { `$global:PSModuleAutoLoadingPreference = 'All' }
 # --- END SUDOKU ALIAS FIX ---
 "@
 
@@ -120,23 +131,33 @@ if ($null -eq $profileContent -or -not ($profileContent -match "BEGIN SUDOKU ALI
 if ($isAdmin) {
     $MachinePath = [Environment]::GetEnvironmentVariable("PATH", "Machine")
     $MachinePathArray = $MachinePath -split ';' | Where-Object { $_ -ne "" -and $_ -ne $BinDir -and $_ -ne $BridgeDir }
-    $NewMachinePath = "$BinDir;$BridgeDir;" + ($MachinePathArray -join ';')
+    $NewMachinePath = "$BinDir;" + ($MachinePathArray -join ';')
     [Environment]::SetEnvironmentVariable("PATH", $NewMachinePath, "Machine")
-    Write-Host "[+] Binaries and Bridge prepended to global SYSTEM PATH." -ForegroundColor Green
+    Write-Host "[+] Binaries prepended to global SYSTEM PATH." -ForegroundColor Green
 }
 
-# Remove from User PATH if it was added previously to avoid duplicates
+# Clean User PATH
 $UserPath = [Environment]::GetEnvironmentVariable("PATH", "User")
-if ($UserPath -like "*$BinDir*" -or $UserPath -like "*$BridgeDir*") {
+if ($null -ne $UserPath) {
     $UserPathArray = $UserPath -split ';' | Where-Object { $_ -ne "" -and $_ -ne $BinDir -and $_ -ne $BridgeDir }
-    $NewUserPath = $UserPathArray -join ';'
+    $NewUserPath = "$BinDir;" + ($UserPathArray -join ';')
     [Environment]::SetEnvironmentVariable("PATH", $NewUserPath, "User")
-    Write-Host "[-] Removed duplicate from User PATH." -ForegroundColor Gray
+    Write-Host "[+] Binaries added to User PATH." -ForegroundColor Green
 }
+
+# Setup CMD AutoRun to inject BridgeDir for CMD only
+$cmdAutoRunKey = "HKCU:\Software\Microsoft\Command Processor"
+if (-not (Test-Path $cmdAutoRunKey)) {
+    New-Item -Path $cmdAutoRunKey -Force | Out-Null
+}
+$autoRunScript = Join-Path $env:USERPROFILE ".sudoku\cmd_autorun.cmd"
+Set-Content -Path $autoRunScript -Value "@set PATH=%PATH%;$BridgeDir"
+Set-ItemProperty -Path $cmdAutoRunKey -Name "AutoRun" -Value "`"$autoRunScript`""
+Write-Host "[+] CMD AutoRun configured to inject Sudoku Bridge commands." -ForegroundColor Green
 
 # Update PATH (Current session)
 $SessionPathArray = $env:PATH -split ';' | Where-Object { $_ -ne "" -and $_ -ne $BinDir -and $_ -ne $BridgeDir }
-$env:PATH = "$BinDir;$BridgeDir;" + ($SessionPathArray -join ';')
+$env:PATH = "$BinDir;" + ($SessionPathArray -join ';')
 Write-Host "[+] Current session PATH updated." -ForegroundColor Green
 
 Write-Host "=== Installation completed successfully! ===" -ForegroundColor Cyan
