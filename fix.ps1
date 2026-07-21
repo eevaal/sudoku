@@ -1,1 +1,0 @@
-=[Environment]::GetEnvironmentVariable('PATH','Machine') -split ';' | Where-Object {  -ne '' -and  -notlike '*\.sudoku\bridge*' } -join ';'; [Environment]::SetEnvironmentVariable('PATH', , 'Machine') 

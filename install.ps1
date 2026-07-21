@@ -13,8 +13,6 @@ if (-not $isAdmin) {
 
 # Paths
 $BinDir = Join-Path $env:USERPROFILE ".sudoku\bin"
-$SudoCmd = "cmd/sudo"
-$RmCmd = "cmd/rm"
 
 Write-Host "=== Sudoku Package Installation ===" -ForegroundColor Cyan
 
@@ -26,8 +24,21 @@ if (-not (Test-Path $BinDir)) {
     Write-Host "[v] Directory already exists: $BinDir" -ForegroundColor DarkGreen
 }
 
-# Dynamic Compilation
+# Clone repository if running via iex (remote install) and cmd/ is not present
 $CmdDir = Join-Path $PWD "cmd"
+if (-not (Test-Path $CmdDir)) {
+    $tempDir = Join-Path $env:TEMP "sudoku_install_$(Get-Random)"
+    Write-Host "[+] Cloning Sudoku repository..." -ForegroundColor Yellow
+    git clone --depth 1 https://github.com/eevaal/sudoku.git $tempDir 2>&1 | Out-Null
+    if (Test-Path (Join-Path $tempDir "cmd")) {
+        Push-Location $tempDir
+        $CmdDir = Join-Path $PWD "cmd"
+    } else {
+        Write-Warning "Failed to clone repository. Skipping compilation."
+    }
+}
+
+# Dynamic Compilation
 if (Test-Path $CmdDir) {
     $tools = Get-ChildItem -Path $CmdDir -Directory
     foreach ($tool in $tools) {
@@ -74,7 +85,7 @@ foreach (`$cmdObj in `$cmdletObjs) {
     if (`$cmd -in "ls", "rm", "cp", "mv", "cat", "pwd", "mkdir", "clear", "sleep", "echo", "head", "tail", "wc") { continue }
     `$batPath = Join-Path `$BridgeDir "`$cmd.bat"
     
-    `$batContent = "@`"`$env:USERPROFILE\.sudoku\bin\bridge.exe`" `"`$cmd`" %*"
+    `$batContent = "@`"%USERPROFILE%\.sudoku\bin\bridge.exe`" `"`$cmd`" %*"
     Set-Content -Path `$batPath -Value `$batContent
 }
 
@@ -98,7 +109,7 @@ if (Test-Path `$busyboxPath) {
     foreach (`$applet in `$applets) {
         if (-not [string]::IsNullOrWhiteSpace(`$applet)) {
             `$batPath = Join-Path `$BridgeDir "`$applet.bat"
-            `$batContent = "@`"`$env:USERPROFILE\.sudoku\bin\bridge.exe`" `"`$applet`" %*"
+            `$batContent = "@`"%USERPROFILE%\.sudoku\bin\bridge.exe`" `"`$applet`" %*"
             Set-Content -Path `$batPath -Value `$batContent
         }
     }
