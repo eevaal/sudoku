@@ -74,16 +74,33 @@ foreach (`$cmdObj in `$cmdletObjs) {
     if (`$cmd -in "ls", "rm", "cp", "mv", "cat", "pwd", "mkdir", "clear", "sleep", "echo", "head", "tail", "wc") { continue }
     `$batPath = Join-Path `$BridgeDir "`$cmd.bat"
     
-    `$formatString = '@set PATH=%PATH:{0}=%`n@set PATH=%PATH:;;=;%`n@bridge.exe "{1}" %*'
-    `$batContent = `$formatString -f `$BridgeDir, `$cmd
+    `$batContent = "@`"`$env:USERPROFILE\.sudoku\bin\bridge.exe`" `"`$cmd`" %*"
     Set-Content -Path `$batPath -Value `$batContent
 }
 
-`$cmdBuiltins = @("assoc", "ftype", "mklink", "vol", "ver", "title", "color", "start", "md", "rd", "ren", "rename", "call", "pushd", "popd", "doskey")
-foreach (`$cmd in `$cmdBuiltins) {
-    `$batPath = Join-Path `$BridgeDir "`$cmd.bat"
-    if (-not (Test-Path `$batPath)) {
-        Set-Content -Path `$batPath -Value "@cmd /c `$cmd %*"
+# 2.2 Download BusyBox and configure UNIX applets
+`$busyboxUrl = "https://frippery.org/files/busybox/busybox.exe"
+`$busyboxPath = Join-Path `$env:USERPROFILE ".sudoku\bin\busybox.exe"
+`$appletsPath = Join-Path `$env:USERPROFILE ".sudoku\bin\applets.txt"
+
+if (-not (Test-Path `$busyboxPath)) {
+    Write-Host "[+] Downloading BusyBox..." -ForegroundColor Yellow
+    Invoke-WebRequest -Uri `$busyboxUrl -OutFile `$busyboxPath
+}
+
+if (Test-Path `$busyboxPath) {
+    Write-Host "[+] Configuring UNIX commands via BusyBox..." -ForegroundColor Yellow
+    # Get list of all supported applets, using cmd /c to ensure pure ASCII encoding (no UTF-16 issues)
+    cmd /c "`"`$busyboxPath`" --list > `"`$appletsPath`""
+
+    # Create wrappers for all applets
+    `$applets = Get-Content `$appletsPath
+    foreach (`$applet in `$applets) {
+        if (-not [string]::IsNullOrWhiteSpace(`$applet)) {
+            `$batPath = Join-Path `$BridgeDir "`$applet.bat"
+            `$batContent = "@`"`$env:USERPROFILE\.sudoku\bin\bridge.exe`" `"`$applet`" %*"
+            Set-Content -Path `$batPath -Value `$batContent
+        }
     }
 }
 "@
