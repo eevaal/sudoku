@@ -1,5 +1,5 @@
 $ErrorActionPreference = "Continue"
-$pipeName = "SudokuBridgePipe"
+$pipeName = "SudokuBridgePipe_v2"
 
 # Prevent multiple instances
 try {

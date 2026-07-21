@@ -106,13 +106,12 @@ if (-not (Test-Path $profilePath)) {
 
 $profileSnippet = @"
 # --- BEGIN SUDOKU ALIAS FIX ---
-`$oldPref = `$global:PSModuleAutoLoadingPreference
-`$global:PSModuleAutoLoadingPreference = 'None'
+`$env:PATH = (`$env:PATH -split ';' | Where-Object { `$_.ToLower() -notlike "*\.sudoku\bridge*" }) -join ';'
 `$aliasesToRemove = @('dir', 'echo', 'copy', 'del', 'move', 'type', 'cat', 'ls', 'rm', 'cp', 'mv', 'pwd', 'sleep', 'clear', 'mkdir', 'kill')
+`$existing = Get-Alias | Select-Object -ExpandProperty Name
 foreach (`$a in `$aliasesToRemove) {
-    if (Test-Path "Alias:`$a") { Remove-Item "Alias:`$a" -Force -ErrorAction SilentlyContinue }
+    if (`$existing -contains `$a) { Remove-Item "Alias:`$a" -Force -ErrorAction Ignore }
 }
-if (`$oldPref -ne `$null) { `$global:PSModuleAutoLoadingPreference = `$oldPref } else { `$global:PSModuleAutoLoadingPreference = 'All' }
 # --- END SUDOKU ALIAS FIX ---
 "@
 
@@ -120,11 +119,15 @@ $profileContent = ""
 if (Test-Path $profilePath) {
     $profileContent = Get-Content $profilePath -Raw
 }
-if ($null -eq $profileContent -or -not ($profileContent -match "BEGIN SUDOKU ALIAS FIX")) {
+if ($null -eq $profileContent) { $profileContent = "" }
+
+if ($profileContent -match "(?s)# --- BEGIN SUDOKU ALIAS FIX ---.*# --- END SUDOKU ALIAS FIX ---") {
+    $profileContent = $profileContent -replace "(?s)# --- BEGIN SUDOKU ALIAS FIX ---.*# --- END SUDOKU ALIAS FIX ---", ($profileSnippet -replace '\$', '$$$$')
+    Set-Content -Path $profilePath -Value $profileContent
+    Write-Host "[+] Updated alias remover in `$PROFILE." -ForegroundColor Green
+} else {
     Add-Content -Path $profilePath -Value "`n$profileSnippet`n"
     Write-Host "[+] Added alias remover to `$PROFILE." -ForegroundColor Green
-} else {
-    Write-Host "[v] Profile already patched." -ForegroundColor DarkGreen
 }
 
 # Update PATH (Persistent for MACHINE to override System32)

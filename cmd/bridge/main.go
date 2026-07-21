@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"syscall"
 	"time"
 )
 
@@ -36,13 +37,13 @@ func main() {
 	}
 	payload = append(payload, '\n')
 
-	pipePath := `\\.\pipe\SudokuBridgePipe`
+	pipeName := `\\.\pipe\SudokuBridgePipe_v2`
 	
 	var conn io.ReadWriteCloser
 	var openErr error
 	for i := 0; i < 3; i++ {
 		// On Windows, named pipes can be opened like files
-		file, err := os.OpenFile(pipePath, os.O_RDWR, 0)
+		file, err := os.OpenFile(pipeName, os.O_RDWR, 0)
 		if err == nil {
 			conn = file
 			break
@@ -55,6 +56,7 @@ func main() {
 			serverScript := userProfile + `\.sudoku\server.ps1`
 			if _, err := os.Stat(serverScript); err == nil {
 				cmd := exec.Command("powershell", "-WindowStyle", "Hidden", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", serverScript)
+				cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}
 				cmd.Start()
 			}
 		}
